@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.IO;
 using UnityEngine;
 using MiniJSON;
@@ -11,34 +12,70 @@ namespace Anarchy
 		private StreamWriter sw;
         private GameObject _go;
 		private AnarchyObject Anar;
-		private Dictionary<string, object> anarchy_settings;
-		private Dictionary<string, object> anarchy_strings;
-		private Dictionary<string, string> settings_string = new Dictionary<string, string>();
+		public Dictionary<string, object> anarchy_settings;
+		public Dictionary<string, object> anarchy_strings;
+		public Dictionary<string, string> settings_string = new Dictionary<string, string>();
 		public Dictionary<string, bool> settings_bool = new Dictionary<string, bool>();
 		private Type type;
-		private bool isenabled = false;
+		public bool isenabled = false;
 		private string output;
 		private int i;
 		private int result;
-		private bool hotkey_rebind = false;
+        private bool isinitiated = false;
+        private string modVersion = "2.3.0";
+        private double settingsVersion = 1.1;
+        private double dictionaryVersion = 1.1;
 
-		
-		public void Init() {
-			anarchy_settings = Json.Deserialize(File.ReadAllText(Path + @"/settings.json")) as Dictionary<string, object>;
-			anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/dictionary.json")) as Dictionary<string, object>;
-			foreach (KeyValuePair<string, object> S in anarchy_settings) {
-				type = S.Value.GetType();
-				if(type==typeof(bool)) {
-					settings_bool[S.Key] = bool.Parse(S.Value.ToString());
-				} else {
-					settings_string[S.Key] = S.Value.ToString();
-				}
-			}
-		}
+		public Main()
+        {
+            Init();
+            SetupKeyBinding();
+        }
+
+		public void Init()
+        {
+            if (isinitiated == false)
+            {
+                isinitiated = true;
+                System.IO.Directory.CreateDirectory(Path);
+                if (!File.Exists(Path + @"/settings.json"))
+                {
+                    generateSettingsFile();
+                }
+                if (!File.Exists(Path + @"/dictionary.json"))
+                {
+                    generateDictionaryFile();
+                }
+                anarchy_settings = Json.Deserialize(File.ReadAllText(Path + @"/settings.json")) as Dictionary<string, object>;
+                if (anarchy_settings == null || string.IsNullOrEmpty(anarchy_settings["version"].ToString()) || Double.Parse(anarchy_settings["version"].ToString()) < settingsVersion)
+                {
+                    generateSettingsFile();
+                    anarchy_settings = Json.Deserialize(File.ReadAllText(Path + @"/settings.json")) as Dictionary<string, object>;
+                }
+                anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/dictionary.json")) as Dictionary<string, object>;
+                if (anarchy_strings == null || string.IsNullOrEmpty(anarchy_strings["version"].ToString()) || Double.Parse(anarchy_strings["version"].ToString()) < dictionaryVersion)
+                {
+                    generateDictionaryFile();
+                    anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/dictionary.json")) as Dictionary<string, object>;
+                }
+                foreach (KeyValuePair<string, object> S in anarchy_settings)
+                {
+                    type = S.Value.GetType();
+                    if (type == typeof(bool))
+                    {
+                        settings_bool[S.Key] = bool.Parse(S.Value.ToString());
+                    }
+                    else
+                    {
+                        settings_string[S.Key] = S.Value.ToString();
+                    }
+                }
+            }
+        }
 		
         public void onEnabled()
         {
-			_go = new GameObject();
+            _go = new GameObject();
             Anar = _go.AddComponent<AnarchyObject>();
 			Anar.settings = anarchy_settings;
 			Anar.Path = Path;
@@ -57,11 +94,15 @@ namespace Anarchy
         }
 		
 		public void onDrawSettingsUI()
-		{
-			GUIStyle labelStyle = new GUIStyle (GUI.skin.label); 
-			labelStyle.margin=new RectOffset(15,0,10,0);
-			labelStyle.alignment = TextAnchor.MiddleLeft;
-			GUIStyle toggleStyle = new GUIStyle (GUI.skin.toggle); 
+        {
+            anarchy_settings = Json.Deserialize(File.ReadAllText(Path + @"/settings.json")) as Dictionary<string, object>;
+            GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+            labelStyle.margin = new RectOffset(15, 0, 10, 0);
+            labelStyle.alignment = TextAnchor.MiddleLeft;
+            GUIStyle displayStyle = new GUIStyle(GUI.skin.label);
+            displayStyle.margin = new RectOffset(0, 10, 10, 0);
+            displayStyle.alignment = TextAnchor.MiddleLeft;
+            GUIStyle toggleStyle = new GUIStyle (GUI.skin.toggle); 
 			toggleStyle.margin=new RectOffset(0,10,19,16);
 			toggleStyle.alignment = TextAnchor.MiddleLeft;
 			GUIStyle textfieldStyle = new GUIStyle (GUI.skin.textField); 
@@ -69,32 +110,33 @@ namespace Anarchy
 			textfieldStyle.alignment = TextAnchor.MiddleCenter;
 			GUIStyle buttonStyle = new GUIStyle (GUI.skin.button); 
 			buttonStyle.margin=new RectOffset(0,10,10,0);
-			GUILayout.BeginHorizontal();
-			GUILayout.BeginVertical();
-			foreach (KeyValuePair<string, object> S in anarchy_settings) {
-				GUILayout.Label (anarchy_strings.ContainsKey(S.Key)?anarchy_strings[S.Key].ToString():S.Key, labelStyle, GUILayout.Height(30));
-			}
-			GUILayout.EndVertical();
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical();
+            GUILayout.Label("Version", labelStyle, GUILayout.Height(30));
+            foreach (KeyValuePair<string, object> S in anarchy_settings)
+            {
+                if (S.Key != "version")
+                {
+                    GUILayout.Label(anarchy_strings.ContainsKey(S.Key) ? anarchy_strings[S.Key].ToString() : S.Key, labelStyle, GUILayout.Height(30));
+                }
+            }
+            GUILayout.EndVertical();
 			GUILayout.FlexibleSpace();
 			GUILayout.BeginVertical();
-			foreach (KeyValuePair<string, object> S in anarchy_settings) {
+            GUILayout.Label(modVersion, displayStyle, GUILayout.Height(30));
+            foreach (KeyValuePair<string, object> S in anarchy_settings) {
 				type = S.Value.GetType();
-				if(S.Key == "anarchyHotkey") {
-					bool hotkey = GUILayout.Button (settings_string[S.Key], buttonStyle, GUILayout.Width(130), GUILayout.Height(30));
-					if(hotkey_rebind) {
-						KeyCode key;
-						if (FetchKey (out key)) {
-							settings_string["anarchyHotkey"] = key.ToString();
-							hotkey_rebind = false;
-						}
-					} else if(hotkey) {
-						hotkey_rebind = true;
-					}
-				} else if(type==typeof(bool)) {
-					settings_bool[S.Key] = GUILayout.Toggle (settings_bool[S.Key],"",toggleStyle, GUILayout.Width(16), GUILayout.Height(16));
-				} else {
-					settings_string[S.Key] = GUILayout.TextField (settings_string[S.Key], textfieldStyle, GUILayout.Width(130), GUILayout.Height(30));
-				}
+                if (S.Key != "version")
+                {
+                    if (type == typeof(bool))
+                    {
+                        settings_bool[S.Key] = GUILayout.Toggle(settings_bool[S.Key], "", toggleStyle, GUILayout.Width(16), GUILayout.Height(16));
+                    }
+                    else
+                    {
+                        settings_string[S.Key] = GUILayout.TextField(settings_string[S.Key], textfieldStyle, GUILayout.Width(130), GUILayout.Height(30));
+                    }
+                }
 			}
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
@@ -114,8 +156,8 @@ namespace Anarchy
 		
 		public void onSettingsOpened()
 		{
-
-		}
+            Init();
+        }
 		
 		public void onSettingsClosed()
 		{
@@ -123,18 +165,18 @@ namespace Anarchy
 		}
 
 		public void writeSettingsFile()
-		{
-			sw = File.CreateText(Path+@"/settings.json");
+        {
+            sw = File.CreateText(Path+@"/settings.json");
 			sw.WriteLine("{");
 			i = 0;
-			foreach (KeyValuePair<string, object> S in anarchy_settings) {
+            foreach (KeyValuePair<string, object> S in anarchy_settings) {
 				type = S.Value.GetType();
 				i++;
 				output = "	\""+S.Key+"\": ";
 				if(type==typeof(bool)) {
 					output += settings_bool[S.Key].ToString().ToLower();
 				} else if(type==typeof(double)) {
-					output += settings_string[S.Key];
+					output += settings_string[S.Key].Replace(",",".");
 					if(int.TryParse(settings_string[S.Key],out result)) {
 						output += ".0";
 					}
@@ -148,39 +190,83 @@ namespace Anarchy
 			}
 			sw.WriteLine("}");
 			sw.Flush();
-			sw.Close();	
-			Init();
-			if(isenabled==true) {
-				if((bool)anarchy_settings["anarchyEnabled"]){
-					Anar.settings = anarchy_settings;
+			sw.Close();
+            isinitiated = false;
+            Init();
+            if (isenabled==true) {
+                if ((bool)anarchy_settings["anarchyEnabled"])
+                {
+                    Anar.settings = anarchy_settings;
 					Anar.Enable();
-				} else if(Anar.isenabled==true) {
-					Anar.settings = anarchy_settings;
+				} else if(Anar.isenabled==true)
+                {
+                    Anar.settings = anarchy_settings;
 					Anar.Disable();
-				}
-			}
+                }
+            }
 		}
 		
-        public string Name { get { return "Construction Anarchy [v2.2.1]"; } }
+        public string Name { get { return "Construction Anarchy"; } }
         public string Description { get { return "Lifts building restrictions for assets."; } }
-        private string path;
-		public string Path {
-			get {
-				return path;
-			}
-			set {
-				path = value;
-				Init();
-			}
-		}
-        public string Identifier { get; set; }
-		
-		
-		public void WriteToFile(string text) {
+        public string Identifier { get { return "Marnit@ParkitectAnarchy"; } }
+		public string Path { get { return Assembly.GetExecutingAssembly().CodeBase.Substring(8, Assembly.GetExecutingAssembly().CodeBase.Length - 43)+"/ConAnarchySettings"; } }
+
+
+        public void WriteToFile(string text) {
 			sw = File.AppendText(Path+@"/mod.log");
-			sw.WriteLine(text);
+			sw.WriteLine(DateTime.Now + ": " + text);
 			sw.Flush();
 			sw.Close();
 		}
+
+        public void generateSettingsFile()
+        {
+            sw = File.CreateText(Path + @"/settings.json");
+            sw.WriteLine("{");
+            sw.WriteLine("	\"version\": " + settingsVersion + (int.TryParse(settingsVersion.ToString(), out result)?".0":"") + ",");
+            sw.WriteLine("	\"anarchyEnabled\": true,");
+            sw.WriteLine("	\"anarchyEnforced\": false,");
+            sw.WriteLine("	\"heightChangeDelta\": 0.01,");
+            sw.WriteLine("	\"defaultGridSubdivision\": 1.0,");
+            sw.WriteLine("	\"defaultSnapToGridCenter\": true,");
+            sw.WriteLine("	\"buildOnGrid\": false");
+            sw.WriteLine("}");
+            sw.Flush();
+            sw.Close();
+        }
+
+        public void generateDictionaryFile()
+        {
+            sw = File.CreateText(Path + @"/dictionary.json");
+            sw.WriteLine("{");
+            sw.WriteLine("	\"version\": " + dictionaryVersion + (int.TryParse(dictionaryVersion.ToString(), out result) ? ".0" : "") + ",");
+            sw.WriteLine("	\"anarchyEnabled\": \"Anarchy Enabled\",");
+            sw.WriteLine("	\"anarchyEnforced\": \"Always Override Settings\",");
+            sw.WriteLine("	\"heightChangeDelta\": \"Vertical Grid Size\",");
+            sw.WriteLine("	\"defaultGridSubdivision\": \"Horizontal Grid Subdivision\",");
+            sw.WriteLine("	\"defaultSnapToGridCenter\": \"Default To Grid Center\",");
+            sw.WriteLine("	\"buildOnGrid\": \"Force On Grid\"");
+            sw.WriteLine("}");
+            sw.Flush();
+            sw.Close();
+        }
+
+        private void SetupKeyBinding()
+        {
+            KeyGroup keyGroup = new KeyGroup(Identifier);
+            keyGroup.keyGroupName = Name;
+            ScriptableSingleton<InputManager>.Instance.registerKeyGroup(keyGroup);
+            RegisterKey("AnarchyToggle", KeyCode.None, "Toggle Construction Anarchy", "Used to enable or disable all settings applied by Construction Anarchy");
+        }
+
+        private KeyMapping RegisterKey(string identifier, KeyCode keyCode, string Name, string Description = "")
+        {
+            KeyMapping keyMapping = new KeyMapping(Identifier + "/" + identifier, keyCode, KeyCode.None);
+            keyMapping.keyGroupIdentifier = Identifier;
+            keyMapping.keyName = Name;
+            keyMapping.keyDescription = Description;
+            ScriptableSingleton<InputManager>.Instance.registerKeyMapping(keyMapping);
+            return keyMapping;
+        }
     }
 }
