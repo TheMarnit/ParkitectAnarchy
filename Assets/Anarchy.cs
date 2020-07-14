@@ -15,8 +15,9 @@ public class AnarchyObject : MonoBehaviour
     private Type type;
     public string Path { get; set; }
     public Dictionary<string, object> settings { get; set; }
-    public bool isenabled = false;
+    public bool isEnabled = false;
     public Anarchy.Main main;
+    private SettingsWindow settingsWindow;
     private void Update()
     {
         if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.Identifier + "/AnarchyToggle")))
@@ -30,11 +31,23 @@ public class AnarchyObject : MonoBehaviour
                     main.settings_bool["anarchyEnabled"] = true;
                 }
                 main.writeSettingsFile();
+        }
+        if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.Identifier + "/AnarchySettings")))
+        {
+            if (settingsWindow)
+            {
+                settingsWindow.close();
             }
+            else
+            {
+                settingsWindow = Instantiate(ScriptableSingleton<UIAssetManager>.Instance.settingsWindowGO);
+                settingsWindow.GetComponent<UITabGroup>().openTab(3);
+            }
+        }
     }
     public void Enable()
     {
-        if (isenabled == true)
+        if (isEnabled == true)
         {
             Disable();
         }
@@ -93,11 +106,11 @@ public class AnarchyObject : MonoBehaviour
         {
             WriteToFile(e.ToString());
         }
-        isenabled = true;
+        isEnabled = true;
     }
     public void Disable()
     {
-        if (isenabled == true)
+        if (isEnabled == true)
         {
             List<Deco> list = AssetManager.Instance.getDecoObjects().ToList();
             try
@@ -137,7 +150,7 @@ public class AnarchyObject : MonoBehaviour
                 WriteToFile(e.ToString());
             }
         }
-        isenabled = false;
+        isEnabled = false;
     }
     public void WriteToFile(string text)
     {

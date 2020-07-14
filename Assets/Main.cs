@@ -22,7 +22,7 @@ namespace Anarchy
 		private int i;
 		private int result;
         private bool isinitiated = false;
-        private string modVersion = "2.3.0";
+        private string modVersion = "2.3.2";
         private double settingsVersion = 1.1;
         private double dictionaryVersion = 1.1;
 
@@ -36,8 +36,16 @@ namespace Anarchy
         {
             if (isinitiated == false)
             {
+                try
+                {
+                    System.IO.Directory.CreateDirectory(Path);
+                }
+                catch
+                {
+                    Debug.LogError("Creating path failed: " + Path);
+                    return;
+                }
                 isinitiated = true;
-                System.IO.Directory.CreateDirectory(Path);
                 if (!File.Exists(Path + @"/settings.json"))
                 {
                     generateSettingsFile();
@@ -58,16 +66,18 @@ namespace Anarchy
                     generateDictionaryFile();
                     anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/dictionary.json")) as Dictionary<string, object>;
                 }
-                foreach (KeyValuePair<string, object> S in anarchy_settings)
-                {
-                    type = S.Value.GetType();
-                    if (type == typeof(bool))
+                if(anarchy_settings.Count > 0) {
+                    foreach (KeyValuePair<string, object> S in anarchy_settings)
                     {
-                        settings_bool[S.Key] = bool.Parse(S.Value.ToString());
-                    }
-                    else
-                    {
-                        settings_string[S.Key] = S.Value.ToString();
+                        type = S.Value.GetType();
+                        if (type == typeof(bool))
+                        {
+                            settings_bool[S.Key] = bool.Parse(S.Value.ToString());
+                        }
+                        else
+                        {
+                            settings_string[S.Key] = S.Value.ToString();
+                        }
                     }
                 }
             }
@@ -198,7 +208,7 @@ namespace Anarchy
                 {
                     Anar.settings = anarchy_settings;
 					Anar.Enable();
-				} else if(Anar.isenabled==true)
+				} else if(Anar.isEnabled==true)
                 {
                     Anar.settings = anarchy_settings;
 					Anar.Disable();
@@ -209,37 +219,53 @@ namespace Anarchy
         public string Name { get { return "Construction Anarchy"; } }
         public string Description { get { return "Lifts building restrictions for assets."; } }
         public string Identifier { get { return "Marnit@ParkitectAnarchy"; } }
-		public string Path { get { return Assembly.GetExecutingAssembly().CodeBase.Substring(8, Assembly.GetExecutingAssembly().CodeBase.Length - 43)+"/ConAnarchySettings"; } }
+        public string Path { get { return System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)+ "/Parkitect/Mods/ConAnarchySettings"; } }
+        //public string Path { get { return Assembly.GetExecutingAssembly().CodeBase.Substring(8, Assembly.GetExecutingAssembly().CodeBase.Length - 43)+"/ConAnarchySettings"; } }
 
 
         public void WriteToFile(string text) {
-			sw = File.AppendText(Path+@"/mod.log");
-			sw.WriteLine(DateTime.Now + ": " + text);
-			sw.Flush();
-			sw.Close();
+            try
+            {
+                sw = File.AppendText(Path + @"/mod.log");
+                sw.WriteLine(DateTime.Now + ": " + text);
+                sw.Flush();
+                sw.Close();
+            }
+            catch
+            {
+                Debug.LogError("Failed writing to: " + Path + @"/mod.log");
+            }
 		}
 
         public void generateSettingsFile()
         {
-            sw = File.CreateText(Path + @"/settings.json");
-            sw.WriteLine("{");
-            sw.WriteLine("	\"version\": " + settingsVersion + (int.TryParse(settingsVersion.ToString(), out result)?".0":"") + ",");
-            sw.WriteLine("	\"anarchyEnabled\": true,");
-            sw.WriteLine("	\"anarchyEnforced\": false,");
-            sw.WriteLine("	\"heightChangeDelta\": 0.01,");
-            sw.WriteLine("	\"defaultGridSubdivision\": 1.0,");
-            sw.WriteLine("	\"defaultSnapToGridCenter\": true,");
-            sw.WriteLine("	\"buildOnGrid\": false");
-            sw.WriteLine("}");
-            sw.Flush();
-            sw.Close();
+            try
+            {
+                sw = File.CreateText(Path + @"/settings.json");
+                sw.WriteLine("{");
+                sw.WriteLine("	\"version\": " + settingsVersion.ToString().Replace(",",".") + (int.TryParse(settingsVersion.ToString(), out result) ? ".0" : "") + ",");
+                sw.WriteLine("	\"anarchyEnabled\": true,");
+                sw.WriteLine("	\"anarchyEnforced\": false,");
+                sw.WriteLine("	\"heightChangeDelta\": 0.01,");
+                sw.WriteLine("	\"defaultGridSubdivision\": 1.0,");
+                sw.WriteLine("	\"defaultSnapToGridCenter\": true,");
+                sw.WriteLine("	\"buildOnGrid\": false");
+                sw.WriteLine("}");
+                sw.Flush();
+                sw.Close();
+            }
+            catch
+            {
+                Debug.LogError("Failed writing to: " + Path + @"/settings.json");
+            }
         }
-
+    
         public void generateDictionaryFile()
         {
+            try { 
             sw = File.CreateText(Path + @"/dictionary.json");
             sw.WriteLine("{");
-            sw.WriteLine("	\"version\": " + dictionaryVersion + (int.TryParse(dictionaryVersion.ToString(), out result) ? ".0" : "") + ",");
+            sw.WriteLine("	\"version\": " + dictionaryVersion.ToString().Replace(",", ".") + (int.TryParse(dictionaryVersion.ToString(), out result) ? ".0" : "") + ",");
             sw.WriteLine("	\"anarchyEnabled\": \"Anarchy Enabled\",");
             sw.WriteLine("	\"anarchyEnforced\": \"Always Override Settings\",");
             sw.WriteLine("	\"heightChangeDelta\": \"Vertical Grid Size\",");
@@ -249,6 +275,11 @@ namespace Anarchy
             sw.WriteLine("}");
             sw.Flush();
             sw.Close();
+            }
+            catch
+            {
+                Debug.LogError("Failed writing to: " + Path + @"/dictionary.json");
+            }
         }
 
         private void SetupKeyBinding()
@@ -257,6 +288,7 @@ namespace Anarchy
             keyGroup.keyGroupName = Name;
             ScriptableSingleton<InputManager>.Instance.registerKeyGroup(keyGroup);
             RegisterKey("AnarchyToggle", KeyCode.None, "Toggle Construction Anarchy", "Used to enable or disable all settings applied by Construction Anarchy");
+            RegisterKey("AnarchySettings", KeyCode.None, "Open mods settings panel", "Can be used for easy access to Construction Anarchy settings panel");
         }
 
         private KeyMapping RegisterKey(string identifier, KeyCode keyCode, string Name, string Description = "")
