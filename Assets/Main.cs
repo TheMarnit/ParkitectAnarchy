@@ -7,7 +7,7 @@ using MiniJSON;
 
 namespace Anarchy
 {
-    public class Main : IMod, IModSettings
+    public class Main : AbstractMod, IModSettings
     {
 		private StreamWriter sw;
         private GameObject _go;
@@ -22,7 +22,6 @@ namespace Anarchy
 		private int i;
 		private int result;
         private bool isinitiated = false;
-        private string modVersion = "2.3.2";
         private double settingsVersion = 1.1;
         private double dictionaryVersion = 1.1;
 
@@ -83,7 +82,7 @@ namespace Anarchy
             }
         }
 		
-        public void onEnabled()
+        public override void onEnabled()
         {
             _go = new GameObject();
             Anar = _go.AddComponent<AnarchyObject>();
@@ -96,7 +95,7 @@ namespace Anarchy
 			isenabled = true;
         }
 		
-		public void onDisabled()
+		public override void onDisabled()
         {
             Anar.Disable();
             UnityEngine.Object.Destroy(_go);
@@ -133,7 +132,7 @@ namespace Anarchy
             GUILayout.EndVertical();
 			GUILayout.FlexibleSpace();
 			GUILayout.BeginVertical();
-            GUILayout.Label(modVersion, displayStyle, GUILayout.Height(30));
+            GUILayout.Label(getVersionNumber(), displayStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings) {
 				type = S.Value.GetType();
                 if (S.Key != "version")
@@ -216,11 +215,14 @@ namespace Anarchy
             }
 		}
 		
-        public string Name { get { return "Construction Anarchy"; } }
-        public string Description { get { return "Lifts building restrictions for assets."; } }
-        public string Identifier { get { return "Marnit@ParkitectAnarchy"; } }
+        public override string getName() { return "Construction Anarchy"; }
+        public override string getDescription() { return "Lifts building restrictions for assets."; }
+        public override string getIdentifier() { return "Marnit@ParkitectAnarchy"; }
+        public override string getVersionNumber() { return "2.4.0"; }
+        public override bool isMultiplayerModeCompatible() { return true; }
+        public override bool isRequiredByAllPlayersInMultiplayerMode() { return false; }
+
         public string Path { get { return System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)+ "/Parkitect/Mods/ConAnarchySettings"; } }
-        //public string Path { get { return Assembly.GetExecutingAssembly().CodeBase.Substring(8, Assembly.GetExecutingAssembly().CodeBase.Length - 43)+"/ConAnarchySettings"; } }
 
 
         public void WriteToFile(string text) {
@@ -284,8 +286,8 @@ namespace Anarchy
 
         private void SetupKeyBinding()
         {
-            KeyGroup keyGroup = new KeyGroup(Identifier);
-            keyGroup.keyGroupName = Name;
+            KeyGroup keyGroup = new KeyGroup(getIdentifier());
+            keyGroup.keyGroupName = getName();
             ScriptableSingleton<InputManager>.Instance.registerKeyGroup(keyGroup);
             RegisterKey("AnarchyToggle", KeyCode.None, "Toggle Construction Anarchy", "Used to enable or disable all settings applied by Construction Anarchy");
             RegisterKey("AnarchySettings", KeyCode.None, "Open mods settings panel", "Can be used for easy access to Construction Anarchy settings panel");
@@ -293,8 +295,8 @@ namespace Anarchy
 
         private KeyMapping RegisterKey(string identifier, KeyCode keyCode, string Name, string Description = "")
         {
-            KeyMapping keyMapping = new KeyMapping(Identifier + "/" + identifier, keyCode, KeyCode.None);
-            keyMapping.keyGroupIdentifier = Identifier;
+            KeyMapping keyMapping = new KeyMapping(getIdentifier() + "/" + identifier, keyCode, KeyCode.None);
+            keyMapping.keyGroupIdentifier = getIdentifier();
             keyMapping.keyName = Name;
             keyMapping.keyDescription = Description;
             ScriptableSingleton<InputManager>.Instance.registerKeyMapping(keyMapping);

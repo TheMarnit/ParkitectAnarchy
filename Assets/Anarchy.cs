@@ -20,7 +20,7 @@ public class AnarchyObject : MonoBehaviour
     private SettingsWindow settingsWindow;
     private void Update()
     {
-        if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.Identifier + "/AnarchyToggle")))
+        if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyToggle")))
         {
                 if ((bool)settings["anarchyEnabled"])
                 {
@@ -32,7 +32,7 @@ public class AnarchyObject : MonoBehaviour
                 }
                 main.writeSettingsFile();
         }
-        if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.Identifier + "/AnarchySettings")))
+        if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchySettings")))
         {
             if (settingsWindow)
             {
