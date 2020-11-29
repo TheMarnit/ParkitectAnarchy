@@ -218,7 +218,8 @@ namespace Anarchy
         public override string getName() { return "Construction Anarchy"; }
         public override string getDescription() { return "Lifts building restrictions for assets."; }
         public override string getIdentifier() { return "Marnit@ParkitectAnarchy"; }
-        public override string getVersionNumber() { return "2.4.0"; }
+        public override string getVersionNumber() { return "2.4.1"; }
+        public override int getOrderPriority() { return 9999; }
         public override bool isMultiplayerModeCompatible() { return true; }
         public override bool isRequiredByAllPlayersInMultiplayerMode() { return false; }
 
