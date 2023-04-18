@@ -57,6 +57,22 @@ public class AnarchyObject : MonoBehaviour
             foreach (Deco D in list)
             {
                 data[D.ToString()] = new Dictionary<string, string>();
+                CustomSize CS = D.gameObject.GetComponent<CustomSize>();
+                if (CS == null)
+                {
+                    CS = D.gameObject.AddComponent<CustomSize>() as CustomSize;
+                }
+                CS.minSize = 0.01f;
+                CS.maxSize = 100f;
+
+                foreach (FieldInfo fi in D.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
+                {
+                    if (fi.Name == "customSizeBehaviourLoaded")
+                    {
+                        fi.SetValue(D, false);
+                        break;
+                    }
+                }
                 foreach (KeyValuePair<string, object> S in settings)
                 {
                     try
