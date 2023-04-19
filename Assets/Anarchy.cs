@@ -83,7 +83,7 @@ public class AnarchyObject : MonoBehaviour
                 {
                     try
                     {
-                        if (S.Key != "version" && S.Key != "anarchyEnabled" && S.Key != "anarchyEnforced")
+                        if (S.Key != "version")
                         {
                             if (
                             (S.Key != "defaultGridSubdivision") ||

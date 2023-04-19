@@ -153,21 +153,23 @@ namespace Anarchy
             GUIStyle displayStyle = new GUIStyle(GUI.skin.label);
             displayStyle.margin = new RectOffset(0, 10, 10, 0);
             displayStyle.alignment = TextAnchor.MiddleLeft;
-            GUIStyle toggleStyle = new GUIStyle (GUI.skin.toggle); 
-			toggleStyle.margin=new RectOffset(0,10,19,16);
-			toggleStyle.alignment = TextAnchor.MiddleLeft;
-			GUIStyle textfieldStyle = new GUIStyle (GUI.skin.textField); 
+            GUIStyle toggleStyle = new GUIStyle(GUI.skin.toggle);
+            toggleStyle.margin = new RectOffset(0, 10, 17, 0);
+            toggleStyle.alignment = TextAnchor.MiddleLeft;
+            GUIStyle textfieldStyle = new GUIStyle (GUI.skin.textField); 
 			textfieldStyle.margin=new RectOffset(0,10,10,0);
 			textfieldStyle.alignment = TextAnchor.MiddleCenter;
 			GUIStyle buttonStyle = new GUIStyle (GUI.skin.button); 
 			buttonStyle.margin=new RectOffset(0,10,10,0);
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
-            GUILayout.Label(getTranslation("version"), labelStyle, GUILayout.Height(30));
+            GUILayout.Label(getTranslation("version_label"), labelStyle, GUILayout.Height(30));
             GUILayout.Label(getTranslation("active_profile"), labelStyle, GUILayout.Height(30));
+            GUILayout.Label(" ", labelStyle, GUILayout.Height(30));
+            GUILayout.Label(getTranslation("field"), labelStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings)
             {
-                if (S.Key != "version")
+                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled")
                 {
                     GUILayout.Label(getTranslation(S.Key), labelStyle, GUILayout.Height(30));
                 }
@@ -177,13 +179,15 @@ namespace Anarchy
 			GUILayout.BeginVertical();
             GUILayout.Label(getVersionNumber(), displayStyle, GUILayout.Height(30));
             GUILayout.Label(activeProfile != "" ? activeProfile.ToString() : getTranslation("profile_0"), displayStyle, GUILayout.Height(30));
+            GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
+            GUILayout.Label(getTranslation("value"), displayStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings) {
 				type = S.Value.GetType();
-                if (S.Key != "version")
+                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled")
                 {
                     if (type == typeof(bool))
                     {
-                        settings_bool[S.Key] = GUILayout.Toggle(settings_bool[S.Key], "", toggleStyle, GUILayout.Width(16), GUILayout.Height(16));
+                        settings_bool[S.Key] = GUILayout.Toggle(settings_bool[S.Key], "", toggleStyle, GUILayout.Width(130), GUILayout.Height(23));
                     }
                     else
                     {
@@ -192,7 +196,20 @@ namespace Anarchy
                 }
 			}
 			GUILayout.EndVertical();
-			GUILayout.EndHorizontal();
+            GUILayout.BeginVertical();
+            GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
+            GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
+            GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
+            GUILayout.Label(getTranslation("enabled"), displayStyle, GUILayout.Height(30));
+            foreach (KeyValuePair<string, object> S in anarchy_settings)
+            {
+                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled")
+                {
+                    settings_bool[S.Key + "_enabled"] = GUILayout.Toggle(settings_bool[S.Key + "_enabled"], "", toggleStyle, GUILayout.Width(85), GUILayout.Height(23));
+                }
+            }
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
 		}
 		
         public string getTranslation(string key)
@@ -270,12 +287,18 @@ namespace Anarchy
                 sw = File.CreateText(Path + @"/constructionanarchy.settings." + id + ".json");
                 sw.WriteLine("{");
                 sw.WriteLine("	\"version\": " + settingsVersion.ToString().Replace(",",".") + (int.TryParse(settingsVersion.ToString(), out result) ? ".0" : "") + ",");
-                writeSettingLine(sw, forceDefault, "anarchyEnabled", typeof(bool), true);
-                writeSettingLine(sw, forceDefault, "anarchyEnforced", typeof(bool), false);
                 writeSettingLine(sw, forceDefault, "heightChangeDelta", typeof(string), "0.01");
+                writeSettingLine(sw, forceDefault, "heightChangeDelta_enabled", typeof(bool), true);
                 writeSettingLine(sw, forceDefault, "defaultGridSubdivision", typeof(string), "1.0");
+                writeSettingLine(sw, forceDefault, "defaultGridSubdivision_enabled", typeof(bool), true);
                 writeSettingLine(sw, forceDefault, "defaultSnapToGridCenter", typeof(bool), true);
+                writeSettingLine(sw, forceDefault, "defaultSnapToGridCenter_enabled", typeof(bool), true);
                 writeSettingLine(sw, forceDefault, "buildOnGrid", typeof(bool), false);
+                writeSettingLine(sw, forceDefault, "buildOnGrid_enabled", typeof(bool), true);
+                writeSettingLine(sw, forceDefault, "customSizeMinimum", typeof(string), "0.1");
+                writeSettingLine(sw, forceDefault, "customSizeMinimum_enabled", typeof(bool), true);
+                writeSettingLine(sw, forceDefault, "customSizeMaximum", typeof(string), "10");
+                writeSettingLine(sw, forceDefault, "customSizeMaximum_enabled", typeof(bool), true);
                 sw.WriteLine("}");
             }
             catch
@@ -326,7 +349,7 @@ namespace Anarchy
             sw = File.CreateText(Path + @"/constructionanarchy.dictionary.json");
             sw.WriteLine("{");
             sw.WriteLine("	\"version\": " + dictionaryVersion.ToString().Replace(",", ".") + (int.TryParse(dictionaryVersion.ToString(), out result) ? ".0" : "") + ",");
-            writeDictionaryLine(sw, "version", "Version");
+            writeDictionaryLine(sw, "version_label", "Version");
             writeDictionaryLine(sw, "activeProfile", "Active Profile");
             writeDictionaryLine(sw, "anarchySettings", "Open mods settings panel");
             writeDictionaryLine(sw, "anarchySettingsDescript", "Can be used for easy access to Construction Anarchy settings panel");
@@ -335,12 +358,15 @@ namespace Anarchy
             writeDictionaryLine(sw, "setProfileNull", "Disable Construction Anarchy");
             writeDictionaryLine(sw, "setProfileNullDescript", "Revert all settings applied by Construction Anarchy");
             writeDictionaryLine(sw, "profile_0", "None");
-            writeDictionaryLine(sw, "anarchyEnabled", "Anarchy Enabled");
-            writeDictionaryLine(sw, "anarchyEnforced", "Always Override Settings");
             writeDictionaryLine(sw, "heightChangeDelta", "Vertical Grid Size");
+            writeDictionaryLine(sw, "field", "Setting");
+            writeDictionaryLine(sw, "value", "Value");
+            writeDictionaryLine(sw, "enabled", "Enabled");
             writeDictionaryLine(sw, "defaultGridSubdivision", "Horizontal Grid Subdivision");
             writeDictionaryLine(sw, "defaultSnapToGridCenter", "Default To Grid Center");
             writeDictionaryLine(sw, "buildOnGrid", "Force On Grid");
+            writeDictionaryLine(sw, "customSizeMinimum", "Minimum Size");
+            writeDictionaryLine(sw, "customSizeMaximum", "Maximum Size");
             sw.WriteLine("}");
             }
             catch
