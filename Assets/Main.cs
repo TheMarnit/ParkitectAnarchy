@@ -4,6 +4,7 @@ using System.Reflection;
 using System.IO;
 using UnityEngine;
 using MiniJSON;
+using System.Text.RegularExpressions;
 
 namespace Anarchy
 {
@@ -18,7 +19,8 @@ namespace Anarchy
 		public Dictionary<string, bool> settings_bool = new Dictionary<string, bool>();
 		private Type type;
 		public bool modIsEnabled = false;
-        public int activeProfile = 1;
+        public List<string> profileIds;
+        public string activeProfile = "1";
 		private string output;
 		private int i;
 		private int result;
@@ -36,6 +38,7 @@ namespace Anarchy
         {
             if (isinitiated == false)
             {
+                profileIds = new List<string>();
                 try
                 {
                     System.IO.Directory.CreateDirectory(Path);
@@ -46,7 +49,6 @@ namespace Anarchy
                     return;
                 }
                 isinitiated = true;
-                activeProfile = 1;
                 if (!File.Exists(Path + @"/constructionanarchy.settings." + activeProfile + ".json"))
                 {
                     if (File.Exists(LegacyPath + @"/settings.json"))
@@ -73,6 +75,13 @@ namespace Anarchy
                 {
                     generateDictionaryFile();
                     anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/constructionanarchy.dictionary.json")) as Dictionary<string, object>;
+                }
+                DirectoryInfo dir = new DirectoryInfo(Path);
+                FileInfo[] info = dir.GetFiles("constructionanarchy.settings.*.json");
+                foreach (FileInfo f in info)
+                {
+                    string[] file = f.ToString().Split('.');
+                    profileIds.Add(file[file.Length - 2]);
                 }
             }
         }
@@ -120,7 +129,7 @@ namespace Anarchy
 			Anar.settings = anarchy_settings;
 			Anar.Path = Path;
 			Anar.main = this;
-            if(activeProfile > 0)
+            if(activeProfile != "")
             {
                 loadActiveProfile();
                 Anar.Enable();
@@ -167,7 +176,7 @@ namespace Anarchy
 			GUILayout.FlexibleSpace();
 			GUILayout.BeginVertical();
             GUILayout.Label(getVersionNumber(), displayStyle, GUILayout.Height(30));
-            GUILayout.Label(activeProfile > 0 ? activeProfile.ToString() : getTranslation("profile_0"), displayStyle, GUILayout.Height(30));
+            GUILayout.Label(activeProfile != "" ? activeProfile.ToString() : getTranslation("profile_0"), displayStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings) {
 				type = S.Value.GetType();
                 if (S.Key != "version")
@@ -211,7 +220,7 @@ namespace Anarchy
                     anarchy_settings[S.Key] = S.Value;
                 }
             }
-            generateSettingsFile(1);
+            generateSettingsFile(activeProfile);
             if (modIsEnabled)
             {
                 Anar.Disable();
@@ -245,11 +254,11 @@ namespace Anarchy
             }
 		}
 
-        public void generateSettingsFile(int number)
+        public void generateSettingsFile(string id, bool forceDefault = false)
         {
             try
             {
-                File.Delete(Path + @"/constructionanarchy.settings."+number+".json");
+                File.Delete(Path + @"/constructionanarchy.settings."+id+".json");
                 File.Delete(LegacyPath + @"/settings.json");
             }
             catch
@@ -258,15 +267,15 @@ namespace Anarchy
             }
             try
             {
-                sw = File.CreateText(Path + @"/constructionanarchy.settings." + number + ".json");
+                sw = File.CreateText(Path + @"/constructionanarchy.settings." + id + ".json");
                 sw.WriteLine("{");
                 sw.WriteLine("	\"version\": " + settingsVersion.ToString().Replace(",",".") + (int.TryParse(settingsVersion.ToString(), out result) ? ".0" : "") + ",");
-                writeSettingLine(sw, "anarchyEnabled", typeof(bool), true);
-                writeSettingLine(sw, "anarchyEnforced", typeof(bool), false);
-                writeSettingLine(sw, "heightChangeDelta", typeof(string), "0.01");
-                writeSettingLine(sw, "defaultGridSubdivision", typeof(string), "1.0");
-                writeSettingLine(sw, "defaultSnapToGridCenter", typeof(bool), true);
-                writeSettingLine(sw, "buildOnGrid", typeof(bool), false);
+                writeSettingLine(sw, forceDefault, "anarchyEnabled", typeof(bool), true);
+                writeSettingLine(sw, forceDefault, "anarchyEnforced", typeof(bool), false);
+                writeSettingLine(sw, forceDefault, "heightChangeDelta", typeof(string), "0.01");
+                writeSettingLine(sw, forceDefault, "defaultGridSubdivision", typeof(string), "1.0");
+                writeSettingLine(sw, forceDefault, "defaultSnapToGridCenter", typeof(bool), true);
+                writeSettingLine(sw, forceDefault, "buildOnGrid", typeof(bool), false);
                 sw.WriteLine("}");
             }
             catch
@@ -283,17 +292,17 @@ namespace Anarchy
             }
         }
 
-        public void writeSettingLine(StreamWriter sw, string setting, Type type, object defaultValue)
+        public void writeSettingLine(StreamWriter sw, bool forceDefault, string setting, Type type, object defaultValue)
         {
             try
             {
                 if (type == typeof(string))
                 {
-                    sw.WriteLine("	\"" + setting + "\": \"" + (anarchy_settings.ContainsKey(setting) ? anarchy_settings[setting] : defaultValue) + "\",");
+                    sw.WriteLine("	\"" + setting + "\": \"" + (anarchy_settings.ContainsKey(setting) && !forceDefault ? anarchy_settings[setting] : defaultValue) + "\",");
                 }
                 if (type == typeof(bool))
                 {
-                    sw.WriteLine("	\"" + setting + "\": " + (anarchy_settings.ContainsKey(setting) ? anarchy_settings[setting].ToString().ToLower() : defaultValue.ToString().ToLower()) + ",");
+                    sw.WriteLine("	\"" + setting + "\": " + (anarchy_settings.ContainsKey(setting) && !forceDefault ? anarchy_settings[setting].ToString().ToLower() : defaultValue.ToString().ToLower()) + ",");
                 }
             }
             catch
@@ -321,8 +330,10 @@ namespace Anarchy
             writeDictionaryLine(sw, "activeProfile", "Active Profile");
             writeDictionaryLine(sw, "anarchySettings", "Open mods settings panel");
             writeDictionaryLine(sw, "anarchySettingsDescript", "Can be used for easy access to Construction Anarchy settings panel");
-            writeDictionaryLine(sw, "setProfile0", "Disable Construction Anarchy");
-            writeDictionaryLine(sw, "setProfile0Descript", "Revert all settings applied by Construction Anarchy");
+            writeDictionaryLine(sw, "setProfile", "Enable profile ");
+            writeDictionaryLine(sw, "setProfileDescript", "Enable all settings applied by profile ");
+            writeDictionaryLine(sw, "setProfileNull", "Disable Construction Anarchy");
+            writeDictionaryLine(sw, "setProfileNullDescript", "Revert all settings applied by Construction Anarchy");
             writeDictionaryLine(sw, "profile_0", "None");
             writeDictionaryLine(sw, "anarchyEnabled", "Anarchy Enabled");
             writeDictionaryLine(sw, "anarchyEnforced", "Always Override Settings");
@@ -365,8 +376,11 @@ namespace Anarchy
             keyGroup.keyGroupName = getName();
             ScriptableSingleton<InputManager>.Instance.registerKeyGroup(keyGroup);
             RegisterKey("AnarchySettings", KeyCode.None, getTranslation("anarchySettings"), getTranslation("anarchySettingsDescript"));
-            RegisterKey("AnarchyProfile_0", KeyCode.None, getTranslation("setProfile0"), getTranslation("setProfile0Descript"));
-            RegisterKey("AnarchyProfile_1", KeyCode.None, "Enable profile 1", "Enable all settings applied by profile 1");
+            RegisterKey("AnarchyProfile_0", KeyCode.None, getTranslation("setProfileNull"), getTranslation("setProfileNullDescript"));
+            foreach (string id in profileIds)
+            {
+                RegisterKey("AnarchyProfile_" + id, KeyCode.None, getTranslation("setProfile") + id, getTranslation("setProfileDescript") + id);
+            }
         }
 
         private KeyMapping RegisterKey(string identifier, KeyCode keyCode, string Name, string Description = "")

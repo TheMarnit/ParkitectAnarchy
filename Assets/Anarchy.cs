@@ -36,14 +36,17 @@ public class AnarchyObject : MonoBehaviour
             }
             if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_0")))
             {
-                main.activeProfile = 0;
+                main.activeProfile = "";
                 Disable();
             }
-            if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_1")))
+            foreach (string id in main.profileIds)
             {
-                main.activeProfile = 1;
-                main.loadActiveProfile();
-                Enable();
+                if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_" + id)))
+                {
+                    main.activeProfile = id;
+                    main.loadActiveProfile();
+                    Enable();
+                }
             }
         }
     }
@@ -59,6 +62,7 @@ public class AnarchyObject : MonoBehaviour
             foreach (Deco D in list)
             {
                 data[D.ToString()] = new Dictionary<string, string>();
+                /*
                 CustomSize CS = D.gameObject.GetComponent<CustomSize>();
                 if (CS == null)
                 {
@@ -66,7 +70,6 @@ public class AnarchyObject : MonoBehaviour
                 }
                 CS.minSize = 0.01f;
                 CS.maxSize = 100f;
-
                 foreach (FieldInfo fi in D.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
                 {
                     if (fi.Name == "customSizeBehaviourLoaded")
@@ -75,6 +78,7 @@ public class AnarchyObject : MonoBehaviour
                         break;
                     }
                 }
+                */
                 foreach (KeyValuePair<string, object> S in settings)
                 {
                     try
