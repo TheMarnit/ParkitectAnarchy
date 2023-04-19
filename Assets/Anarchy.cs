@@ -20,34 +20,36 @@ public class AnarchyObject : MonoBehaviour
     private SettingsWindow settingsWindow;
     private void Update()
     {
-        if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyToggle")))
+        if (!UIUtility.isInputFieldFocused())
         {
-                if ((bool)settings["anarchyEnabled"])
+            if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchySettings")))
+            {
+                if (settingsWindow)
                 {
-                    main.settings_bool["anarchyEnabled"] = false;
+                    settingsWindow.close();
                 }
                 else
                 {
-                    main.settings_bool["anarchyEnabled"] = true;
+                    settingsWindow = Instantiate(ScriptableSingleton<UIAssetManager>.Instance.settingsWindowGO);
+                    settingsWindow.GetComponent<UITabGroup>().openTab(3);
                 }
-                main.writeSettingsFile();
-        }
-        if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchySettings")))
-        {
-            if (settingsWindow)
-            {
-                settingsWindow.close();
             }
-            else
+            if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_0")))
             {
-                settingsWindow = Instantiate(ScriptableSingleton<UIAssetManager>.Instance.settingsWindowGO);
-                settingsWindow.GetComponent<UITabGroup>().openTab(3);
+                main.activeProfile = 0;
+                Disable();
+            }
+            if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_1")))
+            {
+                main.activeProfile = 1;
+                main.loadActiveProfile();
+                Enable();
             }
         }
     }
     public void Enable()
     {
-        if (isEnabled == true)
+        if (isEnabled == false)
         {
             Disable();
         }
@@ -170,7 +172,7 @@ public class AnarchyObject : MonoBehaviour
     }
     public void WriteToFile(string text)
     {
-        sw = File.AppendText(Path + @"/mod.log");
+        sw = File.AppendText(Path + @"/constructionanarchy.log");
         sw.WriteLine(DateTime.Now + ": " + text);
         sw.Flush();
         sw.Close();
