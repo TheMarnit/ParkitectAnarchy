@@ -21,12 +21,10 @@ namespace Anarchy
 		public bool modIsEnabled = false;
         public List<string> profileIds;
         public string activeProfile = "1";
-		private string output;
-		private int i;
 		private int result;
         private bool isinitiated = false;
         private double settingsVersion = 1.2;
-        private double dictionaryVersion = 1.12;
+        private double dictionaryVersion = 1.13;
 
 		public Main()
         {
@@ -146,7 +144,6 @@ namespace Anarchy
 		
 		public void onDrawSettingsUI()
         {
-            loadActiveProfile();
             GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
             labelStyle.margin = new RectOffset(15, 0, 10, 0);
             labelStyle.alignment = TextAnchor.MiddleLeft;
@@ -169,7 +166,7 @@ namespace Anarchy
             GUILayout.Label(getTranslation("field"), labelStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings)
             {
-                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
+                if (S.Key != "version" && S.Key != "profileName" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
                 {
                     GUILayout.Label(getTranslation(S.Key), labelStyle, GUILayout.Height(30));
                 }
@@ -183,7 +180,7 @@ namespace Anarchy
             GUILayout.Label(getTranslation("value"), displayStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings) {
 				type = S.Value.GetType();
-                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
+                if (S.Key != "version" && S.Key != "profileName" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
                 {
                     if (type == typeof(bool))
                     {
@@ -198,12 +195,19 @@ namespace Anarchy
 			GUILayout.EndVertical();
             GUILayout.BeginVertical();
             GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
-            GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
+            if (activeProfile == null)
+            {
+                GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
+            }
+            else
+            {
+                settings_string["profileName"] = GUILayout.TextField(settings_string["profileName"], textfieldStyle, GUILayout.Width(130), GUILayout.Height(30));
+            }
             GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
             GUILayout.Label(getTranslation("enabled"), displayStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings)
             {
-                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
+                if (S.Key != "version" && S.Key != "profileName" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
                 {
                     settings_bool[S.Key + "_enabled"] = GUILayout.Toggle(settings_bool[S.Key + "_enabled"], "", toggleStyle, GUILayout.Height(23));
                 }
@@ -214,11 +218,13 @@ namespace Anarchy
 		
         public string getTranslation(string key)
         {
-            return (anarchy_strings.ContainsKey(key) ? anarchy_strings[key].ToString() : key);
+            return anarchy_strings.ContainsKey(key) ? anarchy_strings[key].ToString() : key;
         }
+
 		public void onSettingsOpened()
 		{
             Init();
+            loadActiveProfile();
         }
 		
 		public void onSettingsClosed()
@@ -290,6 +296,7 @@ namespace Anarchy
                 sw = File.CreateText(Path + @"/constructionanarchy.settings." + id + ".json");
                 sw.WriteLine("{");
                 sw.WriteLine("	\"version\": " + settingsVersion.ToString().Replace(",",".") + (int.TryParse(settingsVersion.ToString(), out result) ? ".0" : "") + ",");
+                writeSettingLine(sw, forceDefault, "profileName", typeof(string), getTranslation("profileNameDefault") + id);
                 writeSettingLine(sw, forceDefault, "heightChangeDelta", typeof(string), "0.01");
                 writeSettingLine(sw, forceDefault, "heightChangeDelta_enabled", typeof(bool), true);
                 writeSettingLine(sw, forceDefault, "defaultGridSubdivision", typeof(string), "1.0");
@@ -353,7 +360,11 @@ namespace Anarchy
             sw.WriteLine("{");
             sw.WriteLine("	\"version\": " + dictionaryVersion.ToString().Replace(",", ".") + (int.TryParse(dictionaryVersion.ToString(), out result) ? ".0" : "") + ",");
             writeDictionaryLine(sw, "versionLabel", "Version");
+            writeDictionaryLine(sw, "profileName", "Profile name");
+            writeDictionaryLine(sw, "profileNameDefault", "Profile ");
             writeDictionaryLine(sw, "activeProfile", "Active Profile");
+            writeDictionaryLine(sw, "profileEnabled", "Profile enabled: ");
+            writeDictionaryLine(sw, "profileEnabledNull", "Construction Anarchy disabled");
             writeDictionaryLine(sw, "anarchySettings", "Open mods settings panel");
             writeDictionaryLine(sw, "anarchySettingsDescript", "Can be used for easy access to Construction Anarchy settings panel");
             writeDictionaryLine(sw, "setProfile", "Enable profile ");

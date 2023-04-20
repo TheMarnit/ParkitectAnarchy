@@ -38,6 +38,8 @@ public class AnarchyObject : MonoBehaviour
             {
                 Disable();
                 main.activeProfile = "";
+                Notification notification = new Notification(main.getTranslation("profileEnabledNull"));
+                NotificationBar.Instance.addNotification(notification);
             }
             foreach (string id in main.profileIds)
             {
@@ -46,7 +48,10 @@ public class AnarchyObject : MonoBehaviour
                     Disable();
                     main.activeProfile = id;
                     main.loadActiveProfile();
+                    settings = main.anarchy_settings;
                     Enable();
+                    Notification notification = new Notification(main.getTranslation("profileEnabled") + settings["profileName"].ToString());
+                    NotificationBar.Instance.addNotification(notification);
                 }
             }
         }
