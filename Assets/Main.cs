@@ -163,7 +163,7 @@ namespace Anarchy
             GUILayout.Label(getTranslation("versionLabel"), labelStyle, GUILayout.Height(30));
             GUILayout.Label(getTranslation("activeProfile"), labelStyle, GUILayout.Height(30));
             GUILayout.Label(" ", labelStyle, GUILayout.Height(30));
-            GUILayout.Label(getTranslation("field"), labelStyle, GUILayout.Height(30));
+            GUILayout.Label(activeProfile != "" ? getTranslation("field") : " ", labelStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings)
             {
                 if (S.Key != "version" && S.Key != "profileName" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
@@ -177,7 +177,7 @@ namespace Anarchy
             GUILayout.Label(getVersionNumber(), displayStyle, GUILayout.Height(30));
             GUILayout.Label(activeProfile != "" ? activeProfile.ToString() : getTranslation("profileNull"), displayStyle, GUILayout.Height(30));
             GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
-            GUILayout.Label(getTranslation("value"), displayStyle, GUILayout.Height(30));
+            GUILayout.Label(activeProfile != "" ? getTranslation("value") : " ", displayStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings) {
 				type = S.Value.GetType();
                 if (S.Key != "version" && S.Key != "profileName" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
@@ -195,7 +195,7 @@ namespace Anarchy
 			GUILayout.EndVertical();
             GUILayout.BeginVertical();
             GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
-            if (activeProfile == null)
+            if (activeProfile == "")
             {
                 GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
             }
@@ -204,7 +204,7 @@ namespace Anarchy
                 settings_string["profileName"] = GUILayout.TextField(settings_string["profileName"], textfieldStyle, GUILayout.Width(130), GUILayout.Height(30));
             }
             GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
-            GUILayout.Label(getTranslation("enabled"), displayStyle, GUILayout.Height(30));
+            GUILayout.Label(activeProfile != "" ? getTranslation("enabled") : " ", displayStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings)
             {
                 if (S.Key != "version" && S.Key != "profileName" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
