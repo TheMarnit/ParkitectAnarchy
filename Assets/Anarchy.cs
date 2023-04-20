@@ -36,13 +36,14 @@ public class AnarchyObject : MonoBehaviour
             }
             if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_0")))
             {
-                main.activeProfile = "";
                 Disable();
+                main.activeProfile = "";
             }
             foreach (string id in main.profileIds)
             {
                 if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_" + id)))
                 {
+                    Disable();
                     main.activeProfile = id;
                     main.loadActiveProfile();
                     Enable();
@@ -62,64 +63,44 @@ public class AnarchyObject : MonoBehaviour
             foreach (Deco D in list)
             {
                 data[D.ToString()] = new Dictionary<string, string>();
-                /*
                 CustomSize CS = D.gameObject.GetComponent<CustomSize>();
-                if (CS == null)
+                data[D.ToString()].Add("heightChangeDelta", D.heightChangeDelta.ToString());
+                data[D.ToString()].Add("defaultGridSubdivision", D.defaultGridSubdivision.ToString());
+                data[D.ToString()].Add("defaultSnapToGridCenter", D.defaultSnapToGridCenter.ToString());
+                data[D.ToString()].Add("buildOnGrid", D.buildOnGrid.ToString());
+                data[D.ToString()].Add("customSizeMinimum", CS?.minSize.ToString());
+                data[D.ToString()].Add("customSizeMaximum", CS?.maxSize.ToString());
+                if (bool.Parse(settings["heightChangeDelta_enabled"].ToString()))
                 {
-                    CS = D.gameObject.AddComponent<CustomSize>() as CustomSize;
+                    D.heightChangeDelta = float.Parse(settings["heightChangeDelta"].ToString());
                 }
-                CS.minSize = 0.01f;
-                CS.maxSize = 100f;
-                foreach (FieldInfo fi in D.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
+                if (bool.Parse(settings["defaultGridSubdivision_enabled"].ToString()))
                 {
-                    if (fi.Name == "customSizeBehaviourLoaded")
+                    D.defaultGridSubdivision = float.Parse(settings["defaultGridSubdivision"].ToString());
+                }
+                if (bool.Parse(settings["defaultSnapToGridCenter_enabled"].ToString()))
+                {
+                    D.defaultSnapToGridCenter = bool.Parse(settings["defaultSnapToGridCenter"].ToString());
+                }
+                if (bool.Parse(settings["buildOnGrid_enabled"].ToString()))
+                {
+                    D.buildOnGrid = bool.Parse(settings["buildOnGrid"].ToString());
+                }
+                if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()) || bool.Parse(settings["customSizeMaximum_enabled"].ToString()))
+                {
+                    if (CS == null)
                     {
-                        fi.SetValue(D, false);
-                        break;
+                        CS = D.gameObject.AddComponent<CustomSize>() as CustomSize;
                     }
-                }
-                */
-                foreach (KeyValuePair<string, object> S in settings)
-                {
-                    try
+                    CS.minSize = bool.Parse(settings["customSizeMinimum_enabled"].ToString()) ? float.Parse(settings["customSizeMinimum"].ToString()) : 1;
+                    CS.maxSize = bool.Parse(settings["customSizeMaximum_enabled"].ToString()) ? float.Parse(settings["customSizeMaximum"].ToString()) : 1;
+                    foreach (FieldInfo fi in D.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
                     {
-                        if (S.Key != "version")
+                        if (fi.Name == "customSizeBehaviourLoaded")
                         {
-                            if (
-                            (S.Key != "defaultGridSubdivision") ||
-                            (bool.Parse(D.GetType().GetField("buildOnGrid").GetValue(D).ToString())) ||
-                            (((float)(double)S.Value) > (float.Parse(D.GetType().GetField(S.Key).GetValue(D).ToString()))) ||
-                            ((bool)settings["anarchyEnforced"])
-                            )
-                            {
-                                if (
-                                (S.Key != "heightChangeDelta") ||
-                                ((((float)(double)S.Value) > 0) && (((float)(double)S.Value) < (float.Parse(D.GetType().GetField(S.Key).GetValue(D).ToString())))) ||
-                                ((bool)settings["anarchyEnforced"])
-                                )
-                                {
-                                    data[D.ToString()].Add(S.Key, D.GetType().GetField(S.Key).GetValue(D).ToString());
-                                    type = D.GetType().GetField(S.Key).GetValue(D).GetType();
-                                    if (type == typeof(float))
-                                    {
-                                        D.GetType().GetField(S.Key).SetValue(D, (float)(double)S.Value);
-                                    }
-                                    else if (type == typeof(bool))
-                                    {
-                                        D.GetType().GetField(S.Key).SetValue(D, (bool)S.Value);
-                                    }
-                                    else
-                                    {
-                                        WriteToFile("Enable: " + type + ": Type unsupported (" + S.Key + ")");
-                                    }
-                                }
-                            }
+                            fi.SetValue(D, false);
+                            break;
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        WriteToFile("Enable: " + S.Key + ": Field unsupported");
-                        WriteToFile(e.ToString());
                     }
                 }
             }
@@ -141,27 +122,41 @@ public class AnarchyObject : MonoBehaviour
                 {
                     if (data.ContainsKey(D.ToString()))
                     {
-                        foreach (KeyValuePair<string, string> S in data[D.ToString()])
+                        CustomSize CS = D.gameObject.GetComponent<CustomSize>();
+                        if (bool.Parse(settings["heightChangeDelta_enabled"].ToString()))
                         {
-                            try
+                            D.heightChangeDelta = float.Parse(data[D.ToString()]["heightChangeDelta"]);
+                        }
+                        if (bool.Parse(settings["defaultGridSubdivision_enabled"].ToString()))
+                        {
+                            D.defaultGridSubdivision = float.Parse(data[D.ToString()]["defaultGridSubdivision"]);
+                        }
+                        if (bool.Parse(settings["defaultSnapToGridCenter_enabled"].ToString()))
+                        {
+                            D.defaultSnapToGridCenter = bool.Parse(data[D.ToString()]["defaultSnapToGridCenter"]);
+                        }
+                        if (bool.Parse(settings["buildOnGrid_enabled"].ToString()))
+                        {
+                            D.buildOnGrid = bool.Parse(data[D.ToString()]["buildOnGrid"]);
+                        }
+                        if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()) || bool.Parse(settings["customSizeMaximum_enabled"].ToString()))
+                        {
+                            if (data[D.ToString()]["customSizeMinimum"] == null)
                             {
-                                type = D.GetType().GetField(S.Key).GetValue(D).GetType();
-                                if (type == typeof(float))
-                                {
-                                    D.GetType().GetField(S.Key).SetValue(D, float.Parse(S.Value));
-                                }
-                                else if (type == typeof(bool))
-                                {
-                                    D.GetType().GetField(S.Key).SetValue(D, bool.Parse(S.Value));
-                                }
-                                else
-                                {
-                                    WriteToFile("Disable: " + type + ": Type unsupported (" + S.Key + ")");
-                                }
+                                Destroy(CS);
                             }
-                            catch
+                            else
                             {
-                                WriteToFile("Disable: " + S.Key + ": Field unsupported");
+                                CS.minSize = float.Parse(data[D.ToString()]["customSizeMinimum"]);
+                                CS.maxSize = float.Parse(data[D.ToString()]["customSizeMaximum"]);
+                            }
+                            foreach (FieldInfo fi in D.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
+                            {
+                                if (fi.Name == "customSizeBehaviourLoaded")
+                                {
+                                    fi.SetValue(D, false);
+                                    break;
+                                }
                             }
                         }
                     }

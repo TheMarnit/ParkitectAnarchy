@@ -25,8 +25,8 @@ namespace Anarchy
 		private int i;
 		private int result;
         private bool isinitiated = false;
-        private double settingsVersion = 1.1;
-        private double dictionaryVersion = 1.1;
+        private double settingsVersion = 1.2;
+        private double dictionaryVersion = 1.12;
 
 		public Main()
         {
@@ -163,13 +163,13 @@ namespace Anarchy
 			buttonStyle.margin=new RectOffset(0,10,10,0);
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
-            GUILayout.Label(getTranslation("version_label"), labelStyle, GUILayout.Height(30));
-            GUILayout.Label(getTranslation("active_profile"), labelStyle, GUILayout.Height(30));
+            GUILayout.Label(getTranslation("versionLabel"), labelStyle, GUILayout.Height(30));
+            GUILayout.Label(getTranslation("activeProfile"), labelStyle, GUILayout.Height(30));
             GUILayout.Label(" ", labelStyle, GUILayout.Height(30));
             GUILayout.Label(getTranslation("field"), labelStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings)
             {
-                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled")
+                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
                 {
                     GUILayout.Label(getTranslation(S.Key), labelStyle, GUILayout.Height(30));
                 }
@@ -178,12 +178,12 @@ namespace Anarchy
 			GUILayout.FlexibleSpace();
 			GUILayout.BeginVertical();
             GUILayout.Label(getVersionNumber(), displayStyle, GUILayout.Height(30));
-            GUILayout.Label(activeProfile != "" ? activeProfile.ToString() : getTranslation("profile_0"), displayStyle, GUILayout.Height(30));
+            GUILayout.Label(activeProfile != "" ? activeProfile.ToString() : getTranslation("profileNull"), displayStyle, GUILayout.Height(30));
             GUILayout.Label(" ", displayStyle, GUILayout.Height(30));
             GUILayout.Label(getTranslation("value"), displayStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings) {
 				type = S.Value.GetType();
-                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled")
+                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
                 {
                     if (type == typeof(bool))
                     {
@@ -203,9 +203,9 @@ namespace Anarchy
             GUILayout.Label(getTranslation("enabled"), displayStyle, GUILayout.Height(30));
             foreach (KeyValuePair<string, object> S in anarchy_settings)
             {
-                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled")
+                if (S.Key != "version" && S.Key.Substring(S.Key.Length - 8, 8) != "_enabled" && activeProfile != "")
                 {
-                    settings_bool[S.Key + "_enabled"] = GUILayout.Toggle(settings_bool[S.Key + "_enabled"], "", toggleStyle, GUILayout.Width(85), GUILayout.Height(23));
+                    settings_bool[S.Key + "_enabled"] = GUILayout.Toggle(settings_bool[S.Key + "_enabled"], "", toggleStyle, GUILayout.Height(23));
                 }
             }
             GUILayout.EndVertical();
@@ -223,25 +223,28 @@ namespace Anarchy
 		
 		public void onSettingsClosed()
         {
-            if (settings_bool.Count > 0)
+            if (activeProfile != "")
             {
-                foreach (KeyValuePair<string, bool> S in settings_bool)
+                if (settings_bool.Count > 0)
                 {
-                    anarchy_settings[S.Key] = S.Value;
+                    foreach (KeyValuePair<string, bool> S in settings_bool)
+                    {
+                        anarchy_settings[S.Key] = S.Value;
+                    }
                 }
-            }
-            if (settings_string.Count > 0)
-            {
-                foreach (KeyValuePair<string, string> S in settings_string)
+                if (settings_string.Count > 0)
                 {
-                    anarchy_settings[S.Key] = S.Value;
+                    foreach (KeyValuePair<string, string> S in settings_string)
+                    {
+                        anarchy_settings[S.Key] = S.Value;
+                    }
                 }
-            }
-            generateSettingsFile(activeProfile);
-            if (modIsEnabled)
-            {
-                Anar.Disable();
-                Anar.Enable();
+                generateSettingsFile(activeProfile);
+                if (modIsEnabled)
+                {
+                    Anar.Disable();
+                    Anar.Enable();
+                }
             }
         }
 		
@@ -349,7 +352,7 @@ namespace Anarchy
             sw = File.CreateText(Path + @"/constructionanarchy.dictionary.json");
             sw.WriteLine("{");
             sw.WriteLine("	\"version\": " + dictionaryVersion.ToString().Replace(",", ".") + (int.TryParse(dictionaryVersion.ToString(), out result) ? ".0" : "") + ",");
-            writeDictionaryLine(sw, "version_label", "Version");
+            writeDictionaryLine(sw, "versionLabel", "Version");
             writeDictionaryLine(sw, "activeProfile", "Active Profile");
             writeDictionaryLine(sw, "anarchySettings", "Open mods settings panel");
             writeDictionaryLine(sw, "anarchySettingsDescript", "Can be used for easy access to Construction Anarchy settings panel");
@@ -357,7 +360,7 @@ namespace Anarchy
             writeDictionaryLine(sw, "setProfileDescript", "Enable all settings applied by profile ");
             writeDictionaryLine(sw, "setProfileNull", "Disable Construction Anarchy");
             writeDictionaryLine(sw, "setProfileNullDescript", "Revert all settings applied by Construction Anarchy");
-            writeDictionaryLine(sw, "profile_0", "None");
+            writeDictionaryLine(sw, "profileNull", "None");
             writeDictionaryLine(sw, "heightChangeDelta", "Vertical Grid Size");
             writeDictionaryLine(sw, "field", "Setting");
             writeDictionaryLine(sw, "value", "Value");
