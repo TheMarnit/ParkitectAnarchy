@@ -36,22 +36,21 @@ public class AnarchyObject : MonoBehaviour
             }
             if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_0")))
             {
-                Disable();
-                main.activeProfile = "";
-                Notification notification = new Notification(main.getTranslation("profileEnabledNull"));
-                NotificationBar.Instance.addNotification(notification);
+                main.enableProfile("");
+            }
+            if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_cycle_previous")))
+            {
+                main.enablePreviousProfile();
+            }
+            if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_cycle_next")))
+            {
+                main.enableNextProfile();
             }
             foreach (string id in main.profileIds)
             {
                 if (Input.GetKeyUp(Settings.Instance.getKeyMapping(main.getIdentifier() + "/AnarchyProfile_" + id)))
                 {
-                    Disable();
-                    main.activeProfile = id;
-                    main.loadActiveProfile();
-                    settings = main.anarchy_settings;
-                    Enable();
-                    Notification notification = new Notification(main.getTranslation("profileEnabled") + settings["profileName"].ToString());
-                    NotificationBar.Instance.addNotification(notification);
+                    main.enableProfile(id);
                 }
             }
         }

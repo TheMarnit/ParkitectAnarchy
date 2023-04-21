@@ -5,6 +5,7 @@ using System.IO;
 using UnityEngine;
 using MiniJSON;
 using System.Text.RegularExpressions;
+using Parkitect.UI;
 
 namespace Anarchy
 {
@@ -24,7 +25,7 @@ namespace Anarchy
 		private int result;
         private bool isinitiated = false;
         private double settingsVersion = 1.2;
-        private double dictionaryVersion = 1.13;
+        private double dictionaryVersion = 1.15;
 
 		public Main()
         {
@@ -119,7 +120,59 @@ namespace Anarchy
                 }
             }
         }
-		
+
+        public void enableProfile(string id)
+        {
+            Anar.Disable();
+            activeProfile = id;
+            Notification notification;
+            if (id == "")
+            {
+                notification = new Notification(getTranslation("profileEnabledNull"));
+            }
+            else
+            {
+                loadActiveProfile();
+                Anar.settings = anarchy_settings;
+                Anar.Enable();
+                notification = new Notification(getTranslation("profileEnabled") + anarchy_settings["profileName"].ToString());
+            }
+            NotificationBar.Instance.addNotification(notification);
+        }
+
+        public void enableNextProfile()
+        {
+            int position = profileIds.IndexOf(activeProfile);
+            if(position + 1 < profileIds.Count)
+            {
+                enableProfile(profileIds[position + 1]);
+            }
+            else
+            {
+                enableProfile("");
+            }
+        }
+
+        public void enablePreviousProfile()
+        {
+            if(activeProfile == "")
+            {
+                enableProfile(profileIds[profileIds.Count - 1]);
+            }
+            else
+            {
+                int position = profileIds.IndexOf(activeProfile);
+                if(position > 0)
+                {
+                    enableProfile(profileIds[position - 1]);
+                }
+                else
+                {
+                    enableProfile("");
+                }
+            }
+        }
+
         public override void onEnabled()
         {
             _go = new GameObject();
@@ -369,6 +422,10 @@ namespace Anarchy
             writeDictionaryLine(sw, "anarchySettingsDescript", "Can be used for easy access to Construction Anarchy settings panel");
             writeDictionaryLine(sw, "setProfile", "Enable profile ");
             writeDictionaryLine(sw, "setProfileDescript", "Enable all settings applied by profile ");
+            writeDictionaryLine(sw, "setProfileNext", "Enable next profile");
+            writeDictionaryLine(sw, "setProfileNextDescript", "Change to the settings of the next profile");
+            writeDictionaryLine(sw, "setProfilePrevious", "Enable previous profile");
+            writeDictionaryLine(sw, "setProfilePreviousDescript", "Change to the settings of the previous profile");
             writeDictionaryLine(sw, "setProfileNull", "Disable Construction Anarchy");
             writeDictionaryLine(sw, "setProfileNullDescript", "Revert all settings applied by Construction Anarchy");
             writeDictionaryLine(sw, "profileNull", "None");
@@ -417,6 +474,8 @@ namespace Anarchy
             ScriptableSingleton<InputManager>.Instance.registerKeyGroup(keyGroup);
             RegisterKey("AnarchySettings", KeyCode.None, getTranslation("anarchySettings"), getTranslation("anarchySettingsDescript"));
             RegisterKey("AnarchyProfile_0", KeyCode.None, getTranslation("setProfileNull"), getTranslation("setProfileNullDescript"));
+            RegisterKey("AnarchyProfile_cycle_previous", KeyCode.None, getTranslation("setProfilePrevious"), getTranslation("setProfilePreviousDescript"));
+            RegisterKey("AnarchyProfile_cycle_next", KeyCode.None, getTranslation("setProfileNext"), getTranslation("setProfileNextDescript"));
             foreach (string id in profileIds)
             {
                 RegisterKey("AnarchyProfile_" + id, KeyCode.None, getTranslation("setProfile") + id, getTranslation("setProfileDescript") + id);
