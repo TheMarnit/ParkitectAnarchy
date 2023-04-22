@@ -133,7 +133,7 @@ public class AnarchyObject : MonoBehaviour
         }
         isEnabled = true;
     }
-    public void Disable()
+    public void Disable(bool force = false)
     {
         if (isEnabled == true)
         {
@@ -145,31 +145,31 @@ public class AnarchyObject : MonoBehaviour
                     if (data.ContainsKey(D.ToString()))
                     {
                         CustomSize CS = D.gameObject.GetComponent<CustomSize>();
-                        if (bool.Parse(settings["heightChangeDelta_enabled"].ToString()))
+                        if (bool.Parse(settings["heightChangeDelta_enabled"].ToString()) || force)
                         {
                             D.heightChangeDelta = float.Parse(data[D.ToString()]["heightChangeDelta"]);
                         }
-                        if (bool.Parse(settings["defaultGridSubdivision_enabled"].ToString()))
+                        if (bool.Parse(settings["defaultGridSubdivision_enabled"].ToString()) || force)
                         {
                             D.defaultGridSubdivision = float.Parse(data[D.ToString()]["defaultGridSubdivision"]);
                         }
-                        if (bool.Parse(settings["defaultSnapToGridCenter_enabled"].ToString()))
+                        if (bool.Parse(settings["defaultSnapToGridCenter_enabled"].ToString()) || force)
                         {
                             D.defaultSnapToGridCenter = bool.Parse(data[D.ToString()]["defaultSnapToGridCenter"]);
                         }
-                        if (bool.Parse(settings["buildOnGrid_enabled"].ToString()))
+                        if (bool.Parse(settings["buildOnGrid_enabled"].ToString()) || force)
                         {
                             D.buildOnGrid = bool.Parse(data[D.ToString()]["buildOnGrid"]);
                         }
-                        if (bool.Parse(settings["orientToSurfaceNormal_enabled"].ToString()))
+                        if (bool.Parse(settings["orientToSurfaceNormal_enabled"].ToString()) || force)
                         {
                             D.orientToSurfaceNormal = bool.Parse(data[D.ToString()]["orientToSurfaceNormal"]);
                         }
-                        if (bool.Parse(settings["randomRotation_enabled"].ToString()))
+                        if (bool.Parse(settings["randomRotation_enabled"].ToString()) || force)
                         {
                             D.randomRotation = bool.Parse(data[D.ToString()]["randomRotation"]);
                         }
-                        if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()) || bool.Parse(settings["customSizeMaximum_enabled"].ToString()))
+                        if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()) || bool.Parse(settings["customSizeMaximum_enabled"].ToString()) || force)
                         {
                             if (data[D.ToString()]["customSizeMinimum"] == null)
                             {

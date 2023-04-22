@@ -236,7 +236,7 @@ namespace Anarchy
 		
 		public override void onDisabled()
         {
-            Anar.Disable();
+            Anar.Disable(true);
             UnityEngine.Object.Destroy(_go);
 			modIsEnabled = false;
         }
@@ -374,7 +374,7 @@ namespace Anarchy
                 generateSettingsFile(activeProfile);
                 if (modIsEnabled)
                 {
-                    Anar.Disable();
+                    Anar.Disable(true);
                     Anar.Enable();
                 }
             }
@@ -383,7 +383,7 @@ namespace Anarchy
         public override string getName() { return "Construction Anarchy"; }
         public override string getDescription() { return "Lifts building restrictions for assets."; }
         public override string getIdentifier() { return "Marnit@ParkitectAnarchy"; }
-        public override string getVersionNumber() { return "3.0.0"; }
+        public override string getVersionNumber() { return "3.0.1"; }
         public override int getOrderPriority() { return 9999; }
         public override bool isMultiplayerModeCompatible() { return true; }
         public override bool isRequiredByAllPlayersInMultiplayerMode() { return false; }
