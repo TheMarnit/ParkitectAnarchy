@@ -145,8 +145,12 @@ namespace Anarchy
             NotificationBar.Instance.addNotification(notification);
         }
 
-        public void enableNextProfile()
+        public void enableNextProfile(bool save = false)
         {
+            if(save)
+            {
+                saveCurrentSettings();
+            }
             int position = profileIds.IndexOf(activeProfile);
             if(position + 1 < profileIds.Count)
             {
@@ -158,9 +162,13 @@ namespace Anarchy
             }
         }
 
-        public void enablePreviousProfile()
+        public void enablePreviousProfile(bool save = false)
         {
-            if(activeProfile == "")
+            if (save)
+            {
+                saveCurrentSettings();
+            }
+            if (activeProfile == "")
             {
                 enableProfile(profileIds[profileIds.Count - 1]);
             }
@@ -285,7 +293,7 @@ namespace Anarchy
             GUILayout.Label(getVersionNumber(), displayStyle, GUILayout.Height(30));
             if (GUILayout.Button("<", buttonStyle, GUILayout.Width(130), GUILayout.Height(30)))
             {
-                enablePreviousProfile();
+                enablePreviousProfile(true);
             }
             if (activeProfile != "")
             {
@@ -325,7 +333,7 @@ namespace Anarchy
             }
             if (GUILayout.Button(">", buttonStyle, GUILayout.Width(130), GUILayout.Height(30)))
             {
-                enableNextProfile();
+                enableNextProfile(true);
             }
             if (activeProfile != "")
             {
@@ -355,6 +363,16 @@ namespace Anarchy
 		
 		public void onSettingsClosed()
         {
+            Anar.Disable(true);
+            saveCurrentSettings();
+            if (modIsEnabled && activeProfile != "")
+            {
+                Anar.Enable();
+            }
+        }
+
+        public void saveCurrentSettings()
+        {
             if (activeProfile != "")
             {
                 if (settings_bool.Count > 0)
@@ -372,18 +390,13 @@ namespace Anarchy
                     }
                 }
                 generateSettingsFile(activeProfile);
-                if (modIsEnabled)
-                {
-                    Anar.Disable(true);
-                    Anar.Enable();
-                }
             }
         }
 		
         public override string getName() { return "Construction Anarchy"; }
         public override string getDescription() { return "Lifts building restrictions for assets."; }
         public override string getIdentifier() { return "Marnit@ParkitectAnarchy"; }
-        public override string getVersionNumber() { return "3.0.1"; }
+        public override string getVersionNumber() { return "3.0.2"; }
         public override int getOrderPriority() { return 9999; }
         public override bool isMultiplayerModeCompatible() { return true; }
         public override bool isRequiredByAllPlayersInMultiplayerMode() { return false; }
