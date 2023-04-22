@@ -27,7 +27,7 @@ namespace Anarchy
 		private int result;
         private bool isinitiated = false;
         private double settingsVersion = 1.2;
-        private double dictionaryVersion = 1.16;
+        private double dictionaryVersion = 1.2;
 
 		public Main()
         {
@@ -303,6 +303,7 @@ namespace Anarchy
                     }
                 }
             }
+            GUILayout.Label(" ", displayStyle, GUILayout.Height(10));
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
             if (activeProfile == "" || activeProfile == "1")
@@ -379,7 +380,7 @@ namespace Anarchy
         public override string getName() { return "Construction Anarchy"; }
         public override string getDescription() { return "Lifts building restrictions for assets."; }
         public override string getIdentifier() { return "Marnit@ParkitectAnarchy"; }
-        public override string getVersionNumber() { return "2.5.0"; }
+        public override string getVersionNumber() { return "3.0.0"; }
         public override int getOrderPriority() { return 9999; }
         public override bool isMultiplayerModeCompatible() { return true; }
         public override bool isRequiredByAllPlayersInMultiplayerMode() { return false; }
@@ -427,6 +428,10 @@ namespace Anarchy
                 writeSettingLine(sw, forceDefault, "defaultSnapToGridCenter_enabled", typeof(bool), true);
                 writeSettingLine(sw, forceDefault, "buildOnGrid", typeof(bool), false);
                 writeSettingLine(sw, forceDefault, "buildOnGrid_enabled", typeof(bool), true);
+                writeSettingLine(sw, forceDefault, "orientToSurfaceNormal", typeof(bool), true);
+                writeSettingLine(sw, forceDefault, "orientToSurfaceNormal_enabled", typeof(bool), false);
+                writeSettingLine(sw, forceDefault, "randomRotation", typeof(bool), true);
+                writeSettingLine(sw, forceDefault, "randomRotation_enabled", typeof(bool), false);
                 writeSettingLine(sw, forceDefault, "customSizeMinimum", typeof(string), "0.1");
                 writeSettingLine(sw, forceDefault, "customSizeMinimum_enabled", typeof(bool), true);
                 writeSettingLine(sw, forceDefault, "customSizeMaximum", typeof(string), "10");
@@ -482,7 +487,6 @@ namespace Anarchy
             sw.WriteLine("{");
             sw.WriteLine("	\"version\": " + dictionaryVersion.ToString().Replace(",", ".") + (int.TryParse(dictionaryVersion.ToString(), out result) ? ".0" : "") + ",");
             writeDictionaryLine(sw, "versionLabel", "Version");
-            writeDictionaryLine(sw, "profileName", "Profile name");
             writeDictionaryLine(sw, "profileNameDefault", "Profile ");
             writeDictionaryLine(sw, "createProfile", "Create Profile");
             writeDictionaryLine(sw, "deleteProfile", "Delete Profile");
@@ -498,14 +502,15 @@ namespace Anarchy
             writeDictionaryLine(sw, "setProfilePreviousDescript", "Change to the settings of the previous profile");
             writeDictionaryLine(sw, "setProfileNull", "Disable Construction Anarchy");
             writeDictionaryLine(sw, "setProfileNullDescript", "Revert all settings applied by Construction Anarchy");
-            writeDictionaryLine(sw, "profileNull", "None");
-            writeDictionaryLine(sw, "heightChangeDelta", "Vertical Grid Size");
             writeDictionaryLine(sw, "field", "Setting");
             writeDictionaryLine(sw, "value", "Value");
             writeDictionaryLine(sw, "enabled", "Enabled");
+            writeDictionaryLine(sw, "heightChangeDelta", "Vertical Grid Size");
             writeDictionaryLine(sw, "defaultGridSubdivision", "Horizontal Grid Subdivision");
             writeDictionaryLine(sw, "defaultSnapToGridCenter", "Default To Grid Center");
             writeDictionaryLine(sw, "buildOnGrid", "Force On Grid");
+            writeDictionaryLine(sw, "orientToSurfaceNormal", "Align To Surface");
+            writeDictionaryLine(sw, "randomRotation", "Randomly rotate object");
             writeDictionaryLine(sw, "customSizeMinimum", "Minimum Size");
             writeDictionaryLine(sw, "customSizeMaximum", "Maximum Size");
             sw.WriteLine("}");

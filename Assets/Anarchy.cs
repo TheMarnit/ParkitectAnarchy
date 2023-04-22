@@ -74,6 +74,8 @@ public class AnarchyObject : MonoBehaviour
                 data[D.ToString()].Add("buildOnGrid", D.buildOnGrid.ToString());
                 data[D.ToString()].Add("customSizeMinimum", CS?.minSize.ToString());
                 data[D.ToString()].Add("customSizeMaximum", CS?.maxSize.ToString());
+                data[D.ToString()].Add("orientToSurfaceNormal", D.orientToSurfaceNormal.ToString());
+                data[D.ToString()].Add("randomRotation", D.randomRotation.ToString());
                 if (bool.Parse(settings["heightChangeDelta_enabled"].ToString()))
                 {
                     D.heightChangeDelta = float.Parse(settings["heightChangeDelta"].ToString());
@@ -90,14 +92,30 @@ public class AnarchyObject : MonoBehaviour
                 {
                     D.buildOnGrid = bool.Parse(settings["buildOnGrid"].ToString());
                 }
+                if (bool.Parse(settings["orientToSurfaceNormal_enabled"].ToString()))
+                {
+                    D.orientToSurfaceNormal = bool.Parse(settings["orientToSurfaceNormal"].ToString());
+                }
+                if (bool.Parse(settings["randomRotation_enabled"].ToString()))
+                {
+                    D.randomRotation = bool.Parse(settings["randomRotation"].ToString());
+                }
                 if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()) || bool.Parse(settings["customSizeMaximum_enabled"].ToString()))
                 {
                     if (CS == null)
                     {
                         CS = D.gameObject.AddComponent<CustomSize>() as CustomSize;
+                        CS.minSize = 1;
+                        CS.maxSize = 1;
                     }
-                    CS.minSize = bool.Parse(settings["customSizeMinimum_enabled"].ToString()) ? float.Parse(settings["customSizeMinimum"].ToString()) : 1;
-                    CS.maxSize = bool.Parse(settings["customSizeMaximum_enabled"].ToString()) ? float.Parse(settings["customSizeMaximum"].ToString()) : 1;
+                    if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()))
+                    {
+                        CS.minSize = float.Parse(settings["customSizeMinimum"].ToString());
+                    }
+                    if (bool.Parse(settings["customSizeMaximum_enabled"].ToString()))
+                    {
+                        CS.maxSize = float.Parse(settings["customSizeMaximum"].ToString());
+                    }
                     foreach (FieldInfo fi in D.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
                     {
                         if (fi.Name == "customSizeBehaviourLoaded")
@@ -142,6 +160,14 @@ public class AnarchyObject : MonoBehaviour
                         if (bool.Parse(settings["buildOnGrid_enabled"].ToString()))
                         {
                             D.buildOnGrid = bool.Parse(data[D.ToString()]["buildOnGrid"]);
+                        }
+                        if (bool.Parse(settings["orientToSurfaceNormal_enabled"].ToString()))
+                        {
+                            D.orientToSurfaceNormal = bool.Parse(data[D.ToString()]["orientToSurfaceNormal"]);
+                        }
+                        if (bool.Parse(settings["randomRotation_enabled"].ToString()))
+                        {
+                            D.randomRotation = bool.Parse(data[D.ToString()]["randomRotation"]);
                         }
                         if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()) || bool.Parse(settings["customSizeMaximum_enabled"].ToString()))
                         {
