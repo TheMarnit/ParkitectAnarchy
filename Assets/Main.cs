@@ -440,7 +440,7 @@ namespace Anarchy
             }
             catch
             {
-                Debug.LogError("Failed writing to: " + Path + @"/settings.json");
+                Debug.LogError("Failed writing to: " + Path + @"/constructionanarchy.settings." + id + ".json");
             }
             finally
             {
