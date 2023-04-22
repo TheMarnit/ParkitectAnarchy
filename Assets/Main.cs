@@ -50,6 +50,26 @@ namespace Anarchy
                     return;
                 }
                 isinitiated = true;
+
+                if (File.Exists(Path + @"/constructionanarchy.dictionary.json"))
+                {
+                    anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/constructionanarchy.dictionary.json")) as Dictionary<string, object>;
+                }
+                else if (File.Exists(LegacyPath + @"/dictionary.json"))
+                {
+                    anarchy_strings = Json.Deserialize(File.ReadAllText(LegacyPath + @"/dictionary.json")) as Dictionary<string, object>;
+                }
+                else
+                {
+                    generateDictionaryFile();
+                    anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/constructionanarchy.dictionary.json")) as Dictionary<string, object>;
+                }
+                if (anarchy_strings == null || string.IsNullOrEmpty(anarchy_strings["version"].ToString()) || Double.Parse(anarchy_strings["version"].ToString()) < dictionaryVersion)
+                {
+                    generateDictionaryFile();
+                    anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/constructionanarchy.dictionary.json")) as Dictionary<string, object>;
+                }
+
                 if (!File.Exists(Path + @"/constructionanarchy.settings." + activeProfile + ".json"))
                 {
                     if (File.Exists(LegacyPath + @"/settings.json"))
@@ -60,23 +80,6 @@ namespace Anarchy
                 }
                 loadActiveProfile();
 
-                if (File.Exists(Path + @"/constructionanarchy.dictionary.json"))
-                {
-                    anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/constructionanarchy.dictionary.json")) as Dictionary<string, object>;
-                }
-                else if (File.Exists(LegacyPath + @"/dictionary.json"))
-                {
-                    anarchy_strings = Json.Deserialize(File.ReadAllText(LegacyPath + @"/dictionary.json")) as Dictionary<string, object>;
-                }
-                else {
-                    generateDictionaryFile();
-                    anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/constructionanarchy.dictionary.json")) as Dictionary<string, object>;
-                }
-                if (anarchy_strings == null || string.IsNullOrEmpty(anarchy_strings["version"].ToString()) || Double.Parse(anarchy_strings["version"].ToString()) < dictionaryVersion)
-                {
-                    generateDictionaryFile();
-                    anarchy_strings = Json.Deserialize(File.ReadAllText(Path + @"/constructionanarchy.dictionary.json")) as Dictionary<string, object>;
-                }
                 DirectoryInfo dir = new DirectoryInfo(Path);
                 FileInfo[] info = dir.GetFiles("constructionanarchy.settings.*.json");
                 foreach (FileInfo f in info)
