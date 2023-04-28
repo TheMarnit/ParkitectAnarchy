@@ -68,21 +68,24 @@ public class AnarchyObject : MonoBehaviour
             {
                 data[D.ToString()] = new Dictionary<string, string>();
                 CustomSize CS = D.gameObject.GetComponent<CustomSize>();
+                CustomParticleSystemSettings CP = D.gameObject.GetComponent<CustomParticleSystemSettings>();
                 data[D.ToString()].Add("heightChangeDelta", D.heightChangeDelta.ToString());
                 data[D.ToString()].Add("defaultGridSubdivision", D.defaultGridSubdivision.ToString());
                 data[D.ToString()].Add("defaultSnapToGridCenter", D.defaultSnapToGridCenter.ToString());
                 data[D.ToString()].Add("buildOnGrid", D.buildOnGrid.ToString());
                 data[D.ToString()].Add("customSizeMinimum", CS?.minSize.ToString());
                 data[D.ToString()].Add("customSizeMaximum", CS?.maxSize.ToString());
+                data[D.ToString()].Add("customParticleMinimum", CP?.multiplierMin.ToString());
+                data[D.ToString()].Add("customParticleMaximum", CP?.multiplierMax.ToString());
                 data[D.ToString()].Add("orientToSurfaceNormal", D.orientToSurfaceNormal.ToString());
                 data[D.ToString()].Add("randomRotation", D.randomRotation.ToString());
                 if (bool.Parse(settings["heightChangeDelta_enabled"].ToString()))
                 {
-                    D.heightChangeDelta = float.Parse(settings["heightChangeDelta"].ToString());
+                    D.heightChangeDelta = ParseFloat(settings["heightChangeDelta"].ToString());
                 }
                 if (bool.Parse(settings["defaultGridSubdivision_enabled"].ToString()))
                 {
-                    D.defaultGridSubdivision = float.Parse(settings["defaultGridSubdivision"].ToString());
+                    D.defaultGridSubdivision = ParseFloat(settings["defaultGridSubdivision"].ToString());
                 }
                 if (bool.Parse(settings["defaultSnapToGridCenter_enabled"].ToString()))
                 {
@@ -102,26 +105,40 @@ public class AnarchyObject : MonoBehaviour
                 }
                 if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()) || bool.Parse(settings["customSizeMaximum_enabled"].ToString()))
                 {
-                    if (CS == null)
+                    if (CP == null)
                     {
-                        CS = D.gameObject.AddComponent<CustomSize>() as CustomSize;
-                        CS.minSize = 1;
-                        CS.maxSize = 1;
-                    }
-                    if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()))
-                    {
-                        CS.minSize = float.Parse(settings["customSizeMinimum"].ToString());
-                    }
-                    if (bool.Parse(settings["customSizeMaximum_enabled"].ToString()))
-                    {
-                        CS.maxSize = float.Parse(settings["customSizeMaximum"].ToString());
-                    }
-                    foreach (FieldInfo fi in D.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
-                    {
-                        if (fi.Name == "customSizeBehaviourLoaded")
+                        if (CS == null)
                         {
-                            fi.SetValue(D, false);
-                            break;
+                            CS = D.gameObject.AddComponent<CustomSize>() as CustomSize;
+                            CS.minSize = 1;
+                            CS.maxSize = 1;
+                        }
+                        if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()))
+                        {
+                            CS.minSize = ParseFloat(settings["customSizeMinimum"].ToString());
+                        }
+                        if (bool.Parse(settings["customSizeMaximum_enabled"].ToString()))
+                        {
+                            CS.maxSize = ParseFloat(settings["customSizeMaximum"].ToString());
+                        }
+                        foreach (FieldInfo fi in D.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
+                        {
+                            if (fi.Name == "customSizeBehaviourLoaded")
+                            {
+                                fi.SetValue(D, false);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()))
+                        {
+                            CP.multiplierMin = ParseFloat(settings["customSizeMinimum"].ToString());
+                        }
+                        if (bool.Parse(settings["customSizeMaximum_enabled"].ToString()))
+                        {
+                            CP.multiplierMax = ParseFloat(settings["customSizeMaximum"].ToString());
                         }
                     }
                 }
@@ -145,13 +162,14 @@ public class AnarchyObject : MonoBehaviour
                     if (data.ContainsKey(D.ToString()))
                     {
                         CustomSize CS = D.gameObject.GetComponent<CustomSize>();
+                        CustomParticleSystemSettings CP = D.gameObject.GetComponent<CustomParticleSystemSettings>();
                         if (bool.Parse(settings["heightChangeDelta_enabled"].ToString()) || force)
                         {
-                            D.heightChangeDelta = float.Parse(data[D.ToString()]["heightChangeDelta"]);
+                            D.heightChangeDelta = ParseFloat(data[D.ToString()]["heightChangeDelta"]);
                         }
                         if (bool.Parse(settings["defaultGridSubdivision_enabled"].ToString()) || force)
                         {
-                            D.defaultGridSubdivision = float.Parse(data[D.ToString()]["defaultGridSubdivision"]);
+                            D.defaultGridSubdivision = ParseFloat(data[D.ToString()]["defaultGridSubdivision"]);
                         }
                         if (bool.Parse(settings["defaultSnapToGridCenter_enabled"].ToString()) || force)
                         {
@@ -171,22 +189,30 @@ public class AnarchyObject : MonoBehaviour
                         }
                         if (bool.Parse(settings["customSizeMinimum_enabled"].ToString()) || bool.Parse(settings["customSizeMaximum_enabled"].ToString()) || force)
                         {
-                            if (data[D.ToString()]["customSizeMinimum"] == null)
+                            if (CP == null)
                             {
-                                Destroy(CS);
+                                if (data[D.ToString()]["customSizeMinimum"] == null)
+                                {
+                                    Destroy(CS);
+                                }
+                                else
+                                {
+                                    CS.minSize = ParseFloat(data[D.ToString()]["customSizeMinimum"]);
+                                    CS.maxSize = ParseFloat(data[D.ToString()]["customSizeMaximum"]);
+                                }
+                                foreach (FieldInfo fi in D.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
+                                {
+                                    if (fi.Name == "customSizeBehaviourLoaded")
+                                    {
+                                        fi.SetValue(D, false);
+                                        break;
+                                    }
+                                }
                             }
                             else
                             {
-                                CS.minSize = float.Parse(data[D.ToString()]["customSizeMinimum"]);
-                                CS.maxSize = float.Parse(data[D.ToString()]["customSizeMaximum"]);
-                            }
-                            foreach (FieldInfo fi in D.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
-                            {
-                                if (fi.Name == "customSizeBehaviourLoaded")
-                                {
-                                    fi.SetValue(D, false);
-                                    break;
-                                }
+                                CP.multiplierMin = ParseFloat(data[D.ToString()]["customSizeMinimum"]);
+                                CP.multiplierMax = ParseFloat(data[D.ToString()]["customSizeMaximum"]);
                             }
                         }
                     }
@@ -199,6 +225,12 @@ public class AnarchyObject : MonoBehaviour
         }
         isEnabled = false;
     }
+
+    public float ParseFloat(string input)
+    {
+        return float.Parse(input.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture.NumberFormat); ;
+    }
+
     public void WriteToFile(string text)
     {
         sw = File.AppendText(Path + @"/constructionanarchy.log");
